@@ -66,6 +66,8 @@ export default function ProductsPage() {
                                     <div className="relative overflow-hidden">
                                         <Image
                                             src={product.image || "/placeholder.svg"}
+                                            width={300}
+                                            height={300}
                                             alt={product.name}
                                             className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                                         />

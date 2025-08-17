@@ -8,7 +8,7 @@ export function HeroSection() {
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                 <Image
-                    src=""
+                    src="/formal-brown-shoes2.jpg"
                     width={1300}
                     height={900}
                     alt="FlexShoes Hero"

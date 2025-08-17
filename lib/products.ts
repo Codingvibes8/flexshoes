@@ -22,7 +22,7 @@ export const products: Products[] = [
         name: "FlexRun Pro",
         price: "$129.99",
         originalPrice: "$159.99",
-        image: "/running-shoes-modern.png",
+        image: "/flex-trainers.jpg",
         category: "Running",
         rating: 4.8,
         reviews: 124,

@@ -27,6 +27,8 @@ export function FeaturedProducts() {
                                 <div className="relative overflow-hidden">
                                     <Image
                                         src={product.image || "/placeholder.svg"}
+                                        width={1200}
+                                        height={400}
                                         alt={product.name}
                                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                                     />

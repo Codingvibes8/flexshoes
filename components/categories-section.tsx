@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import Images from "next/image"
+import Image from "next/image"
 const categories = [
     {
         name: "Men's Collection",
@@ -41,6 +41,7 @@ export function CategoriesSection() {
                             <div className="relative overflow-hidden">
                                 <Image
                                     src={category.image || "/placeholder.svg"}
+                                    width={1300} height={900}
                                     alt={category.name}
                                     className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
