@@ -21,14 +21,14 @@ export function HeroSection() {
             <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
                 <h1 className="text-5xl md:text-7xl font-bold font-sans mb-6 animate-fade-in-up">
                     Step Into
-                    <span className="block text-accent">Excellence</span>
+                    <span className="block text-blue-800">Excellence</span>
                 </h1>
                 <p className="text-xl md:text-2xl mb-8 text-white/90 animate-fade-in-up animation-delay-200">
                     Discover premium footwear that combines style, comfort, and performance
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center animate-fade-in-up animation-delay-400 px-2 sm:px-0">
                     <Link href="/products">
-                        <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <Button size="lg" className="font-bold bg-blue-800 hover:bg-blue-500 text-primary-foreground text-xl">
                             Shop Now
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>
@@ -37,7 +37,7 @@ export function HeroSection() {
                         <Button
                             size="lg"
                             variant="outline"
-                            className="border-white text-white hover:bg-white hover:text-foreground bg-transparent"
+                            className="border-white text-xl text-white font-bold hover:bg-white hover:text-foreground bg-transparent"
                         >
                             View Collection
                         </Button>
