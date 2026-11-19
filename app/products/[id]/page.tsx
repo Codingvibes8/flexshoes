@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link";
 
 type ProductPageProps = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { data: product, error } = await dbHelpers.getProductById(params.id)
+  const { id } = await params
+  const { data: product, error } = await dbHelpers.getProductById(id)
 
   if (error || !product) {
     console.error("Error fetching product:", error)
@@ -29,7 +30,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             alt={product.name}
             className="rounded-lg object-cover w-full max-w-md shadow-lg"
             height={600}
-            src={product.image_url}
+            src={product.imageUrl}
             style={{
               aspectRatio: "600/600",
               objectFit: "cover",
@@ -43,9 +44,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className="text-xl">{product.description}</p>
           <div className="flex items-center space-x-4">
             <span className="text-3xl font-bold">
-              ${product.sale_price ? product.sale_price.toFixed(2) : product.price.toFixed(2)}
+              ${product.salePrice ? product.salePrice.toFixed(2) : product.price.toFixed(2)}
             </span>
-            {product.sale_price && (
+            {product.salePrice && (
               <span className="text-xl text-gray-500 line-through">
                 ${product.price.toFixed(2)}
               </span>

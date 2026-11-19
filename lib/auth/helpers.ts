@@ -1,32 +1,48 @@
-import { supabase } from '../supabase'
+import { auth, currentUser } from "@clerk/nextjs/server"
 
 export const authHelpers = {
-  async signUp(email: string, password: string, userData?: any) {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
-    })
-  },
-
-  async signIn(email: string, password: string) {
-    return supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-  },
-
-  async signOut() {
-    return supabase.auth.signOut()
-  },
-
+  /**
+   * Returns the signed-in Clerk user, or null when there is no session.
+   * Clerk stores users, so there is no local users table to query.
+   */
   async getCurrentUser() {
-    return supabase.auth.getUser()
+    const { userId } = await auth()
+
+    if (!userId) {
+      return { data: null, error: null }
+    }
+
+    try {
+      const user = await currentUser()
+      return { data: user, error: null }
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error(String(error)),
+      }
+    }
   },
 
-  async resetPassword(email: string) {
-    return supabase.auth.resetPasswordForEmail(email)
-  }
+  /** Returns the Clerk user id for the current session, or null. */
+  async getUserId() {
+    const { userId } = await auth()
+    return userId
+  },
+
+  /** Throws when the request is unauthenticated. Use in server actions/route handlers. */
+  async requireUserId() {
+    const { userId } = await auth()
+
+    if (!userId) {
+      throw new Error("Unauthorized")
+    }
+
+    return userId
+  },
+
+  /** Returns the current session claims (role, metadata, etc.). */
+  async getSessionClaims() {
+    const { sessionClaims } = await auth()
+    return sessionClaims
+  },
 }

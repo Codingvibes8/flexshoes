@@ -25,11 +25,6 @@ export default async function ProductsPage() {
       </div>
     )
   }
-    console.log("--- Product Image URLs ---");
-    products.forEach(product => {
-        console.log(`Product: ${product.name}, URL: ${product.image_url}`);
-    });
-    console.log("---------------------------------");
   return (
     <div className="container mx-auto px-4 py-40">
         <Link href={'/'} className={'text-gray-900 text-lg font-bold mb-8'}>Back Home</Link>
@@ -43,7 +38,7 @@ export default async function ProductsPage() {
                   alt={product.name}
                   className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-105"
                   height="400"
-                  src={product.image_url}
+                  src={product.imageUrl}
                   style={{
                     aspectRatio: "400/400",
                     objectFit: "cover",
@@ -59,9 +54,9 @@ export default async function ProductsPage() {
                   <p className="text-sm text-gray-500">{product.brand}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-lg font-bold">
-                      ${product.sale_price ? product.sale_price.toFixed(2) : product.price.toFixed(2)}
+                      ${product.salePrice ? product.salePrice.toFixed(2) : product.price.toFixed(2)}
                     </span>
-                    {product.sale_price && (
+                    {product.salePrice && (
                       <span className="text-sm text-gray-500 line-through">
                         ${product.price.toFixed(2)}
                       </span>

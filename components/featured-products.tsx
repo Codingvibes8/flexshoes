@@ -18,20 +18,13 @@ export default async function FeaturedProducts() {
 
   const placeholderImage = "/placeholder.jpg";
 
-  console.log("--- Featured Product Image URLs ---");
-  products.forEach(product => {
-    console.log(`Product: ${product.name}, URL: ${product.image_url}`);
-  });
-  console.log("---------------------------------");
-
-
   return (
     <section className="py-12 md:py-16 lg:py-20">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-8">Featured Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {products.map((product) => {
-            const imageUrl = product.image_url || placeholderImage;
+            const imageUrl = product.imageUrl || placeholderImage;
 
             return (
                 <Link href={`/products/${product.id}`} key={product.id} className="group">
@@ -54,9 +47,9 @@ export default async function FeaturedProducts() {
                         <p className="text-sm text-gray-500">{product.brand}</p>
                         <div className="flex items-center justify-between mt-2">
                         <span className="text-lg font-bold">
-                          ${product.sale_price ? product.sale_price.toFixed(2) : product.price.toFixed(2)}
+                          ${product.salePrice ? product.salePrice.toFixed(2) : product.price.toFixed(2)}
                         </span>
-                          {product.sale_price && (
+                          {product.salePrice && (
                               <span className="text-sm text-gray-500 line-through">
                             ${product.price.toFixed(2)}
                           </span>

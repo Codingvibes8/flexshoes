@@ -3,12 +3,19 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Search, ShoppingBag, Menu, X } from "lucide-react"
+import {
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useAuth,
+} from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { isLoaded, isSignedIn } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -68,6 +75,31 @@ export function Navigation() {
             <Button variant="ghost" size="icon">
               <ShoppingBag className="w-5 h-5" />
             </Button>
+            {isLoaded && !isSignedIn && (
+              <>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" className="text-white hover:text-yellow-200">
+                    Sign in
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button className="bg-yellow-400 text-blue-950 hover:bg-yellow-300">
+                    Sign up
+                  </Button>
+                </SignUpButton>
+              </>
+            )}
+            {isLoaded && isSignedIn && (
+              <>
+                <Link
+                  href="/account"
+                  className="text-white hover:text-yellow-200 transition-colors"
+                >
+                  Account
+                </Link>
+                <UserButton />
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -108,6 +140,31 @@ export function Navigation() {
               </Link>
               <div className="px-4 py-3">
                 <Input placeholder="Search shoes..." />
+              </div>
+              <div className="px-4 py-3">
+                {isLoaded && !isSignedIn && (
+                  <div className="flex gap-3">
+                    <SignInButton mode="modal">
+                      <Button variant="outline" className="flex-1">
+                        Sign in
+                      </Button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <Button className="flex-1">Sign up</Button>
+                    </SignUpButton>
+                  </div>
+                )}
+                {isLoaded && isSignedIn && (
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href="/account"
+                      className="text-white hover:text-yellow-200"
+                    >
+                      Account
+                    </Link>
+                    <UserButton />
+                  </div>
+                )}
               </div>
             </div>
           </div>

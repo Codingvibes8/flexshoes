@@ -33,7 +33,7 @@ export default async function CategoriesSection() {
               <Card className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                 <div className="relative overflow-hidden">
                   <Image
-                    src={category.image_url || "/placeholder.svg"}
+                    src={category.imageUrl || "/placeholder.svg"}
                     alt={category.name}
                     width={400}
                     height={300}

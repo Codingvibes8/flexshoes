@@ -1,94 +1,152 @@
-import { supabase } from '../supabase'
-import { ProductCategory, ProductFilters } from './types'
+import { and, asc, desc, eq, ilike, isNotNull, or } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
 
-export const dbHelpers = {
-  // Products
-  async getProducts(filters?: ProductFilters) {
-    let query = supabase.from('products').select('*')
-    
-    if (filters?.category) {
-      query = query.eq('category', filters.category)
-    }
-    
-    if (filters?.featured !== undefined) {
-      query = query.eq('featured', filters.featured)
-    }
-    
+import { db } from "./index"
+import { categories, products } from "./schema"
+import type { Category, Product, ProductCategory, ProductFilters } from "./types"
+
+export type DbResult<T> = { data: T; error: null } | { data: null; error: Error }
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error))
+}
+
+function buildProductFilter(filters?: ProductFilters): SQL | undefined {
+  const conditions: SQL[] = []
+
+  if (filters?.category) {
+    conditions.push(eq(products.category, filters.category))
+  }
+
+  if (filters?.featured !== undefined) {
+    conditions.push(eq(products.featured, filters.featured))
+  }
+
+  if (filters?.search?.trim()) {
+    const term = `%${filters.search.trim()}%`
+    conditions.push(
+      or(
+        ilike(products.name, term),
+        ilike(products.description, term),
+        ilike(products.brand, term),
+      ) as SQL,
+    )
+  }
+
+  return conditions.length > 0 ? and(...conditions) : undefined
+}
+
+async function getProducts(filters?: ProductFilters): Promise<DbResult<Product[]>> {
+  try {
+    let query = db
+      .select()
+      .from(products)
+      .where(buildProductFilter(filters))
+      .orderBy(desc(products.createdAt))
+      .$dynamic()
+
     if (filters?.limit) {
       query = query.limit(filters.limit)
     }
-    
+
     if (filters?.offset) {
-      query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1)
+      query = query.offset(filters.offset)
     }
-    
-    return query
-  },
 
-  async getProductById(id: string) {
-    return supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single()
-  },
-
-  async getFeaturedProducts(limit = 8) {
-    return supabase
-      .from('products')
-      .select('*')
-      .eq('featured', true)
-      .limit(limit)
-  },
-
-  async getProductsByCategory(category: ProductCategory, limit?: number) {
-    let query = supabase
-      .from('products')
-      .select('*')
-      .eq('category', category)
-    
-    if (limit) {
-      query = query.limit(limit)
-    }
-    
-    return query
-  },
-
-  async getSaleProducts(limit?: number) {
-    let query = supabase
-      .from('products')
-      .select('*')
-      .not('sale_price', 'is', null)
-    
-    if (limit) {
-      query = query.limit(limit)
-    }
-    
-    return query
-  },
-
-  // Categories
-  async getCategories() {
-    return supabase
-      .from('categories')
-      .select('*')
-      .order('name')
-  },
-
-  async getCategoryBySlug(slug: string) {
-    return supabase
-      .from('categories')
-      .select('*')
-      .eq('slug', slug)
-      .single()
-  },
-
-  // Search
-  async searchProducts(searchTerm: string, limit = 20) {
-    return supabase
-      .from('products')
-      .select('*')
-      .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`)
-      .limit(limit)
+    return { data: await query, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
   }
+}
+
+async function getProductById(id: string): Promise<DbResult<Product | null>> {
+  try {
+    if (!UUID_PATTERN.test(id)) {
+      return { data: null, error: null }
+    }
+
+    const rows = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, id))
+      .limit(1)
+
+    return { data: rows[0] ?? null, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
+  }
+}
+
+async function getFeaturedProducts(limit = 8): Promise<DbResult<Product[]>> {
+  return getProducts({ featured: true, limit })
+}
+
+async function getProductsByCategory(
+  category: ProductCategory | string,
+  limit?: number,
+): Promise<DbResult<Product[]>> {
+  return getProducts({ category, limit })
+}
+
+async function getSaleProducts(limit?: number): Promise<DbResult<Product[]>> {
+  try {
+    let query = db
+      .select()
+      .from(products)
+      .where(isNotNull(products.salePrice))
+      .orderBy(desc(products.createdAt))
+      .$dynamic()
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    return { data: await query, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
+  }
+}
+
+async function getCategories(): Promise<DbResult<Category[]>> {
+  try {
+    const data = await db.select().from(categories).orderBy(asc(categories.name))
+    return { data, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
+  }
+}
+
+async function getCategoryBySlug(slug: string): Promise<DbResult<Category | null>> {
+  try {
+    const rows = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.slug, slug))
+      .limit(1)
+
+    return { data: rows[0] ?? null, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
+  }
+}
+
+async function searchProducts(
+  searchTerm: string,
+  limit = 20,
+): Promise<DbResult<Product[]>> {
+  return getProducts({ search: searchTerm, limit })
+}
+
+export const dbHelpers = {
+  getProducts,
+  getProductById,
+  getFeaturedProducts,
+  getProductsByCategory,
+  getSaleProducts,
+  getCategories,
+  getCategoryBySlug,
+  searchProducts,
 }
