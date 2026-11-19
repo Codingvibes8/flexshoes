@@ -1,9 +1,8 @@
 import { dbHelpers } from "@/lib/db/helpers"
 import { notFound } from "next/navigation"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link";
+import { ProductPurchase } from "@/components/product-purchase"
 
 type ProductPageProps = {
   params: Promise<{
@@ -52,23 +51,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </span>
             )}
           </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Available Sizes:</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
-                <Badge key={size} variant="outline">{size}</Badge>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Available Colors:</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.colors.map((color) => (
-                <Badge key={color} variant="secondary">{color}</Badge>
-              ))}
-            </div>
-          </div>
-          <Button size="lg">Add to Cart</Button>
+          <ProductPurchase
+            productId={product.id}
+            sizes={product.sizes}
+            colors={product.colors}
+            inStock={product.stock > 0}
+          />
         </div>
       </div>
     </div>

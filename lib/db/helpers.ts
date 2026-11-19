@@ -2,8 +2,14 @@ import { and, asc, desc, eq, ilike, isNotNull, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 import { db } from "./index"
-import { categories, products } from "./schema"
-import type { Category, Product, ProductCategory, ProductFilters } from "./types"
+import { categories, orders, products } from "./schema"
+import type {
+  Category,
+  Order,
+  Product,
+  ProductCategory,
+  ProductFilters,
+} from "./types"
 
 export type DbResult<T> = { data: T; error: null } | { data: null; error: Error }
 
@@ -140,6 +146,24 @@ async function searchProducts(
   return getProducts({ search: searchTerm, limit })
 }
 
+async function getOrdersByUserId(
+  userId: string,
+  limit = 20,
+): Promise<DbResult<Order[]>> {
+  try {
+    const data = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.createdAt))
+      .limit(limit)
+
+    return { data, error: null }
+  } catch (error) {
+    return { data: null, error: toError(error) }
+  }
+}
+
 export const dbHelpers = {
   getProducts,
   getProductById,
@@ -149,4 +173,5 @@ export const dbHelpers = {
   getCategories,
   getCategoryBySlug,
   searchProducts,
+  getOrdersByUserId,
 }

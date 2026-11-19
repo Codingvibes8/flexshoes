@@ -62,6 +62,10 @@ export const orders = pgTable(
     totalAmount: doublePrecision("total_amount").notNull(),
     status: text("status").notNull().default("pending"),
     shippingAddress: jsonb("shipping_address").$type<ShippingAddress>(),
+    // Stripe identifiers. The session id is unique so webhooks and the
+    // success page can record the same payment only once.
+    stripeSessionId: text("stripe_session_id").unique(),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -14,6 +14,7 @@ and a comprehensive shopping experience.
 - **Neon Postgres** - Serverless Postgres database
 - **Drizzle ORM** - Type-safe database queries and migrations
 - **Clerk** - Authentication and user management
+- **Stripe** - Hosted Checkout payments and webhooks
 - **Lucide React** - Modern icon library
 - **Next.js Fonts** - Optimized font loading
 
@@ -31,6 +32,7 @@ and a comprehensive shopping experience.
 - **Category Navigation** - Easy browsing by shoe categories
 - **Search Functionality** - Find products quickly
 - **Shopping Cart** - Add to cart functionality (UI ready)
+- **Stripe Checkout** - Secure card payments with webhook-confirmed orders
 - **Authentication** - Sign up, sign in, and account pages powered by Clerk
 
 ### 📱 User Experience
@@ -96,6 +98,8 @@ flexshoes/
    Copy `.env.example` to `.env.local` and fill in:
    - `DATABASE_URL` - your Neon Postgres connection string
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` - from the Clerk dashboard
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` and `STRIPE_ID` - from the Stripe dashboard
+   - `STRIPE_WEBHOOK_SECRET` - printed by `stripe listen` (see [Payments](#-payments-stripe))
 
    For local development you can skip creating a Clerk account:
 
@@ -142,7 +146,6 @@ The database lives in Neon and is accessed through Drizzle ORM.
 
 Clerk handles sign-up, sign-in, sessions, and user records. There is no local
 users table; orders store the Clerk `userId`.
-
 - `middleware.ts` runs `clerkMiddleware()` for every request
 - `app/layout.tsx` wraps the app in `ClerkProvider`
 - `app/sign-in` and `app/sign-up` render Clerk's prebuilt forms
@@ -158,6 +161,44 @@ const { userId } = await auth()
 if (!userId) throw new Error("Unauthorized")
 ```
 
+## 💳 Payments (Stripe)
+
+Payments run through Stripe-hosted Checkout, so card data never touches this
+app. Prices are read from the database on the server, never from the client.
+
+| Env var | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Publishable test/live key |
+| `STRIPE_SECRET_KEY` | Server-side secret key (never expose to the client) |
+| `STRIPE_ID` | Your account id (`acct_...`), for reference |
+| `STRIPE_CURRENCY` | Lowercase ISO currency for line items (default `usd`) |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret from `stripe listen` or the dashboard |
+| `NEXT_PUBLIC_APP_URL` | Public origin for success/cancel URLs (optional in dev) |
+
+**Flow**
+
+1. `POST /api/checkout` (authenticated) validates the product and stock, then
+   creates a Checkout Session with the price in cents.
+2. The browser is redirected to Stripe, then back to
+   `/checkout/success?session_id=...` (or `/checkout/cancel`).
+3. `POST /api/webhooks/stripe` verifies the signature, records the order in the
+   `orders` table, and decrements stock. The success page performs the same
+   idempotent write so local development works without a webhook listener.
+
+**Local webhooks**
+
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+Copy the printed `whsec_...` value into `STRIPE_WEBHOOK_SECRET`. In production,
+add the endpoint `https://your-domain/api/webhooks/stripe` in the Stripe
+dashboard and subscribe to `checkout.session.completed` and
+`checkout.session.async_payment_succeeded`.
+
+Test cards: `4242 4242 4242 4242`, any future expiry, any CVC.
+
 ## 📄 Pages & Routes
 
 - **`/`** - Homepage with hero, featured products, categories, and testimonials
@@ -165,6 +206,10 @@ if (!userId) throw new Error("Unauthorized")
 - **`/products/[id]`** - Individual product detail pages
 - **`/sign-in`** and **`/sign-up`** - Clerk authentication pages
 - **`/account`** - Protected account page for signed-in customers
+- **`/checkout/success`** - Stripe return URL; confirms the order
+- **`/checkout/cancel`** - Shown when a customer abandons Checkout
+- **`POST /api/checkout`** - Creates a Stripe Checkout Session
+- **`POST /api/webhooks/stripe`** - Verifies Stripe events and records orders
 
 ## 🎨 Design System
 
@@ -196,6 +241,11 @@ This project is optimized for deployment on Vercel:
    - `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
    - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/`
    - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_CURRENCY` (optional, defaults to `usd`)
+   - `NEXT_PUBLIC_APP_URL=https://your-domain`
 4. **Apply migrations** with `npm run db:migrate` (and optionally `npm run db:seed`)
 5. **Deploy**
 
